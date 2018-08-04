@@ -55,36 +55,36 @@ export class GapRuleComponent implements OnInit {
     campsites.forEach((item) =>{
       if(item.id in this.campsiteReservations){
         // check if search conflicts with any existing reservation
-        this.campsiteReservations[item.id].forEach((reservation) => {
-          console.log(reservation);
-          let reservationEndDate = reservation[1];
-          let reservationStartDate = reservation[0];
+        let no_conflicts = true;
+        this.campsiteReservations[item.id].every((reservation) => {
+            let reservationEndDate = reservation[1];
+            let reservationStartDate = reservation[0];
 
-          //First, check if the search date leaves a gap from existing reservation end date
-          if(searchStartDate.isSame(moment(reservationEndDate).add(1, 'days'))){
-            console.log("ONE DAY GAP");
-          }
-          //Check if the search end date leaves a gap with an existing reservation start date
-          else if(searchEndDate.isSame(moment(reservationStartDate).subtract(1, 'days'))){
-            console.log("ONE DAY GAP BETWEEEN SEARCH END DATE AND EXISTING RESERVTION")
-          }
-          //Check if search start date is within existing reservation
-          else if(searchStartDate.isSameOrAfter(reservationStartDate) && searchStartDate.isBefore(reservationEndDate)){
-            console.log("Start date within existing reservation")
-          }
-          //Check if end date is within existing reservation
-          else if(searchEndDate.isAfter(reservationStartDate) && searchEndDate.isSameOrBefore(reservationEndDate)){
-            console.log("end date within existing reservation");
-          }else{
-            console.log("no conflicts with this reservation");
-          }
-
+            //First, check if the search date leaves a gap from existing reservation end date
+            if (searchStartDate.isSame(moment(reservationEndDate).add(1, 'days'))) {
+              no_conflicts = false;
+            }
+            //Check if the search end date leaves a gap with an existing reservation start date
+            else if (searchEndDate.isSame(moment(reservationStartDate).subtract(1, 'days'))) {
+              no_conflicts = false;
+            }
+            //Check if search start date is within existing reservation
+            else if (searchStartDate.isSameOrAfter(reservationStartDate) && searchStartDate.isBefore(reservationEndDate)) {
+              no_conflicts = false;
+            }
+            //Check if end date is within existing reservation
+            else if (searchEndDate.isAfter(reservationStartDate) && searchEndDate.isSameOrBefore(reservationEndDate)) {
+              no_conflicts = false;
+            }
         });
+        if (no_conflicts){
+          this.availableCampsites.push(item.name)
+        }
       }else{
         //the campsite has no reservations so you can book
         this.availableCampsites.push(item.name)
       }
-    })
+    });
   }
 
 }

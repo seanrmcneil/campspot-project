@@ -1,0 +1,10 @@
+.available-campsite-container{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-gap: 20px;
+}
+
+.search{
+  margin: 20px;
+  text-align: center;
+}

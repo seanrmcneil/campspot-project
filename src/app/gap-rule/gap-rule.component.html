@@ -1,5 +1,10 @@
-<div>
-  <input (change)="uploadForm($event.target.files)" type="file" value="Import" /><br />
+<div class="search">
+  <input (change)="uploadForm($event.target.files)" type="file" value="Import" />
   <button mat-raised-button color="primary" (click)="onSearch()">Search</button>
+</div>
+<div class="available-campsite-container">
+  <div *ngFor="let campsite of availableCampsites">
+    <mat-card>{{campsite}}</mat-card>
+  </div>
 </div>
 
