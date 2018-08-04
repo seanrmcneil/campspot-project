@@ -38,8 +38,7 @@ export class GapRuleComponent implements OnInit {
   calcCampsiteCalendar(){
     let reservations = this.JSONCampInfo['reservations'];
     reservations.forEach((item) => {
-         let reservation = [moment(item['startDate']), moment(item['endDate']+'Z')];
-         console.log(reservation);
+         let reservation = [moment(item['startDate']), moment(item['endDate'])];
          if (item.campsiteId in this.campsiteReservations){
            this.campsiteReservations[item['campsiteId']].push(reservation)
          }else {
@@ -50,20 +49,28 @@ export class GapRuleComponent implements OnInit {
 
   checkAvailability(){
     let campsites = this.JSONCampInfo['campsites'];
-    let searchStartDate = new Date(this.JSONCampInfo['search']['startDate']);
-    let searchEndDate = new Date(this.JSONCampInfo['search']['endDate']);
+    let searchStartDate = moment(this.JSONCampInfo['search']['startDate']);
+    let searchEndDate = moment(this.JSONCampInfo['search']['endDate']);
     this.availableCampsites = [];
     campsites.forEach((item) =>{
       if(item.id in this.campsiteReservations){
-        console.log(this.campsiteReservations[item.id]);
+        // check if search conflicts with existing reservations
         this.campsiteReservations[item.id].forEach((reservation) => {
           console.log(reservation);
-          // var tomorrow = new Date();
-          // tomorrow.setDate(tomorrow.getDate() + 1);
+          let reservationEndDate = reservation[1];
+          let reservationStartDate = reservation[0];
 
-          console.log(reservation[1].setDate(reservation[1] + 1));
-          if(searchStartDate == reservation[1].getDate() +1){
+          //First, check if the search date leaves a gap from existing reservation end date
+          if(searchStartDate.isSame(moment(reservationEndDate).add(1, 'days'))){
             console.log("ONE DAY GAP");
+          }
+          //Check if the search end date leaves a gap with an existing reservation start date
+          else if(searchEndDate.isSame(moment(reservationStartDate).subtract(1, 'days'))){
+            console.log("ONE DAY GAP BETWEEEN SEARCH END DATE AND EXISTING RESERVTION")
+          }
+          //Check if there is any overlap in date
+          else if(searchStartDate.isBefore(reservationEndDate) ){
+
           }
           // return (searchEndDate >= startdate && startD <= enddate);
         });
