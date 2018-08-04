@@ -54,7 +54,7 @@ export class GapRuleComponent implements OnInit {
     this.availableCampsites = [];
     campsites.forEach((item) =>{
       if(item.id in this.campsiteReservations){
-        // check if search conflicts with existing reservations
+        // check if search conflicts with any existing reservation
         this.campsiteReservations[item.id].forEach((reservation) => {
           console.log(reservation);
           let reservationEndDate = reservation[1];
@@ -68,11 +68,17 @@ export class GapRuleComponent implements OnInit {
           else if(searchEndDate.isSame(moment(reservationStartDate).subtract(1, 'days'))){
             console.log("ONE DAY GAP BETWEEEN SEARCH END DATE AND EXISTING RESERVTION")
           }
-          //Check if there is any overlap in date
-          else if(searchStartDate.isBefore(reservationEndDate) ){
-
+          //Check if search start date is within existing reservation
+          else if(searchStartDate.isSameOrAfter(reservationStartDate) && searchStartDate.isBefore(reservationEndDate)){
+            console.log("Start date within existing reservation")
           }
-          // return (searchEndDate >= startdate && startD <= enddate);
+          //Check if end date is within existing reservation
+          else if(searchEndDate.isAfter(reservationStartDate) && searchEndDate.isSameOrBefore(reservationEndDate)){
+            console.log("end date within existing reservation");
+          }else{
+            console.log("no conflicts with this reservation");
+          }
+
         });
       }else{
         //the campsite has no reservations so you can book
