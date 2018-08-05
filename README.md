@@ -39,4 +39,7 @@
 ## c. Any assumptions or special considerations that were made
 - I assumed that if the gap rule was more than 1 day, that gaps less than or equal to the gap rul are a problem. i.e. if you have a gap rule of 2, you want to avoid gaps of size 1 or 2. 
 - I assumed that if a reservation was on 06/06 and a second reservation was on 06/07 then there is no gap.
+- I assumed that the end date would always be after the start date
+- I assumed that the JSON would be in correct form
+- I assumed that there would be no security threats 
 

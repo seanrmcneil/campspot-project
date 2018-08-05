@@ -43,7 +43,7 @@ describe('GapRuleComponent', () => {
     expect(component.calcCampsiteCalendar(reservation)).toEqual(calendar);
   });
 
-  it('should be able to calculate available reservations with gap rule of 1', () =>{
+  it('should be able to calculate available campsites with gap rule of 1', () =>{
     const campInfo = {
       "search": {
         "startDate": "2018-06-04",
@@ -88,7 +88,7 @@ describe('GapRuleComponent', () => {
     expect(component.checkAvailability(1, campInfo, campCalendar)).toEqual(expectedAvailableCampsites);
   })
 
-  it('should be able to calculate available reservations with gap rule of 2', () =>{
+  it('should be able to calculate available campsites with gap rule of 2', () =>{
     const campInfo = {
       "search": {
         "startDate": "2018-06-04",
@@ -129,6 +129,70 @@ describe('GapRuleComponent', () => {
     };
 
     const expectedAvailableCampsites = ["Cozy Cabin", "Cabin in the Woods"];
+    const campCalendar = component.calcCampsiteCalendar(campInfo.reservations);
+    expect(component.checkAvailability(2, campInfo, campCalendar)).toEqual(expectedAvailableCampsites);
+  })
+
+  it('should be able to calculate available campsites with none available', () =>{
+    const campInfo = {
+      "search": {
+        "startDate": "2018-06-02",
+        "endDate": "2018-06-04"
+      },
+      "campsites": [
+        {
+          "id": 1,
+          "name": "Cozy Cabin"
+        },
+        {
+          "id": 2,
+          "name": "Comfy Cabin"
+        },
+        {
+          "id": 3,
+          "name": "Rustic Cabin"
+        }
+      ],
+      "reservations": [
+        {"campsiteId": 1, "startDate": "2018-06-01", "endDate": "2018-06-03"},
+        {"campsiteId": 2, "startDate": "2018-06-01", "endDate": "2018-06-03"},
+        {"campsiteId": 3, "startDate": "2018-06-01", "endDate": "2018-06-02"}
+      ]
+    };
+
+    const expectedAvailableCampsites = [];
+    const campCalendar = component.calcCampsiteCalendar(campInfo.reservations);
+    expect(component.checkAvailability(2, campInfo, campCalendar)).toEqual(expectedAvailableCampsites);
+  })
+
+  it('should be able to calculate available campsites when search is within other reservation dates', () =>{
+    const campInfo = {
+      "search": {
+        "startDate": "2018-06-02",
+        "endDate": "2018-06-04"
+      },
+      "campsites": [
+        {
+          "id": 1,
+          "name": "Cozy Cabin"
+        },
+        {
+          "id": 2,
+          "name": "Comfy Cabin"
+        },
+        {
+          "id": 3,
+          "name": "Rustic Cabin"
+        }
+      ],
+      "reservations": [
+        {"campsiteId": 1, "startDate": "2018-06-01", "endDate": "2018-06-05"},
+        {"campsiteId": 2, "startDate": "2018-06-05", "endDate": "2018-06-06"},
+        {"campsiteId": 3, "startDate": "2018-06-01", "endDate": "2018-06-05"}
+      ]
+    };
+
+    const expectedAvailableCampsites = ['Comfy Cabin'];
     const campCalendar = component.calcCampsiteCalendar(campInfo.reservations);
     expect(component.checkAvailability(2, campInfo, campCalendar)).toEqual(expectedAvailableCampsites);
   })
