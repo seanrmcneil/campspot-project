@@ -4,8 +4,8 @@
   - brew install npm
   - brew install node
   - npm install -g @angular/cli
-- clone the project
-- cd into the directory
+- clone the project: `git clone https://github.com/seanrmcneil/campspot-project.git`
+- cd into the directory `cd campspot-project'
 - run `ng serve` in the command line
 - open http://localhost:4200/
 - upload the JSON file to the form and see the resuls
