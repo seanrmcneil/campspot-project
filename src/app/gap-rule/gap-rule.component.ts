@@ -9,7 +9,7 @@ import * as moment from 'moment';
 export class GapRuleComponent implements OnInit {
   campInfo: string;
   JSONCampInfo: JSON; //Ideally, I would create a model for this
-  fileToUpload: File = null;
+  fileToUpload: File;
   availableCampsites: Array<string>;
   campsiteReservations: Object; //Ideally, I would create a model for this
 
@@ -21,6 +21,13 @@ export class GapRuleComponent implements OnInit {
   /** Upload the JSON file
    * Ideally, this would have validations on it **/
   uploadForm(files: FileList){
+    //reset everything on a new upload
+    this.fileToUpload = null;
+    this.JSONCampInfo = null;
+    this.campInfo = null;
+    this.availableCampsites = [];
+    this.campsiteReservations = {};
+
     this.fileToUpload = files.item(0);
     let fileReader = new FileReader();
     fileReader.onload = () => {
@@ -30,7 +37,7 @@ export class GapRuleComponent implements OnInit {
   }
 
   onSearch() {
-    this.JSONCampInfo = JSON.parse(this.campInfo)
+    this.JSONCampInfo = JSON.parse(this.campInfo);
     this.calcCampsiteCalendar();
     this.checkAvailability(1);
   }
@@ -39,7 +46,6 @@ export class GapRuleComponent implements OnInit {
    * This was chosen so that the availability can be added each time there is a new reservation
    * rather than on every search **/
   calcCampsiteCalendar(){
-    this.campsiteReservations = {};
     let reservations = this.JSONCampInfo['reservations'];
     reservations.forEach((item) => {
       let dates = [];
@@ -61,7 +67,6 @@ export class GapRuleComponent implements OnInit {
         this.campsiteReservations[item.campsiteId] = dates;
       }
     });
-    console.log(this.campsiteReservations);
   }
 
   checkAvailability(gapRule){
@@ -69,7 +74,6 @@ export class GapRuleComponent implements OnInit {
     let campsites = this.JSONCampInfo['campsites'];
     let searchStartDate = moment(this.JSONCampInfo['search']['startDate']);
     let searchEndDate = moment(this.JSONCampInfo['search']['endDate']);
-    this.availableCampsites = [];
     campsites.forEach((item) =>{
       if(item.id in this.campsiteReservations){
         // check if search conflicts with any existing reservation
