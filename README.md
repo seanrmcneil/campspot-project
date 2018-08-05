@@ -18,7 +18,7 @@
 
 ## b. A high-level description of your approach to solving the problem
 - Steps to solve the problem
-- A. Calculate a calendar of reserved dates per campsite
+- A. Calculate a calendar of reserved dates per campsite. I did this so that all reservations could be calculated once, rather than recalculated reserved dates on every search.
   - Go through all of the existing reservations and create an array of all the dates that are taken
   - i.e. reservation start date of 06/03 and end date of 06/06 for campsite 1 would return 1: Array(06/03, 06/04, 06/05, 06/06)
   - the final calendar would look something like this: 
