@@ -9,9 +9,9 @@ import * as moment from 'moment';
 export class GapRuleComponent implements OnInit {
   campInfo: string;
   JSONCampInfo: JSON; //Ideally, I would create a model for this
-  fileToUpload: File = null;
+  fileToUpload: File;
   availableCampsites: Array<string>;
-  campsiteReservations: Object = {}; //Ideally, I would create a model for this
+  campsiteReservations: Object; //Ideally, I would create a model for this
 
   constructor() { }
 
@@ -21,6 +21,13 @@ export class GapRuleComponent implements OnInit {
   /** Upload the JSON file
    * Ideally, this would have validations on it **/
   uploadForm(files: FileList){
+    //reset everything on a new upload
+    this.fileToUpload = null;
+    this.JSONCampInfo = null;
+    this.campInfo = null;
+    this.availableCampsites = [];
+    this.campsiteReservations = {};
+
     this.fileToUpload = files.item(0);
     let fileReader = new FileReader();
     fileReader.onload = () => {
@@ -30,68 +37,85 @@ export class GapRuleComponent implements OnInit {
   }
 
   onSearch() {
-    this.JSONCampInfo = JSON.parse(this.campInfo)
-    this.calcCampsiteCalendar();
-    this.checkAvailability(1)
+    this.JSONCampInfo = JSON.parse(this.campInfo);
+    this.campsiteReservations = this.calcCampsiteCalendar( this.JSONCampInfo['reservations']);
+    this.availableCampsites = this.checkAvailability(1, this.JSONCampInfo, this.campsiteReservations);
   }
 
   /** Calculate the availability of each campsite.
    * This was chosen so that the availability can be added each time there is a new reservation
    * rather than on every search **/
-  calcCampsiteCalendar(){
-    let reservations = this.JSONCampInfo['reservations'];
+  calcCampsiteCalendar(reservations){
+    let campsiteReservations = {};
     reservations.forEach((item) => {
-         let reservation = [moment(item.startDate), moment(item.endDate)];
-         if (item.campsiteId in this.campsiteReservations){
-           this.campsiteReservations[item.campsiteId].push(reservation)
-         }else {
-           this.campsiteReservations[item.campsiteId] = [reservation]
-         }
+      let dates = [];
+      let currentDate = moment(item.startDate);
+      let endDate = moment(item.endDate);
+      while( currentDate.isSameOrBefore(endDate)){
+        dates.push(moment(currentDate));
+        currentDate = moment(currentDate).add(1, 'days');
+      }
+      if (item.campsiteId in campsiteReservations){
+        let lastDateOfCurrentReservations = campsiteReservations[item.campsiteId][campsiteReservations[item.campsiteId].length-1]
+        if(dates[dates.length-1].isAfter(lastDateOfCurrentReservations)){
+          campsiteReservations[item.campsiteId] = campsiteReservations[item.campsiteId].concat(dates);
+        }else{
+          campsiteReservations[item.campsiteId] = campsiteReservations[item.campsiteId].unshift(dates);
+        }
+      }
+      else {
+        campsiteReservations[item.campsiteId] = dates;
+      }
     });
+    return campsiteReservations;
   }
 
-  checkAvailability(gapRule){
+  checkAvailability(gapRule, campInfo, campsiteReservations){
     gapRule = gapRule + 1; //Users should be able to enter 1 as gap rule, but to compare dates, I need one more day
-    const minGap = 2; //The minimum gap is 2 so this would be used if different gap rules were needed
-    let campsites = this.JSONCampInfo['campsites'];
-    let searchStartDate = moment(this.JSONCampInfo['search']['startDate']);
-    let searchEndDate = moment(this.JSONCampInfo['search']['endDate']);
-    this.availableCampsites = [];
+    let availableCampsites = [];
+    let campsites = campInfo['campsites'];
+    let searchStartDate = moment(campInfo['search']['startDate']);
+    let searchEndDate = moment(campInfo['search']['endDate']);
+    //check availability of each campsite
     campsites.forEach((item) =>{
-      if(item.id in this.campsiteReservations){
+      if(item.id in campsiteReservations){
         // check if search conflicts with any existing reservation
         let conflicts = false;
-        this.campsiteReservations[item.id].forEach((reservation) => {
-            let reservationEndDate = reservation[1];
-            let reservationStartDate = reservation[0];
-
-            //First, check if the search date leaves a gap from existing reservation end date
-            if (searchStartDate.isBetween(moment(reservationEndDate).add(gapRule, 'days'),
-              moment(reservationEndDate).add(minGap, 'days'))) {
+        //Check if the any part of the reservation is already booked for that campsite
+        if (campsiteReservations[item.id].filter(e => e.isSame(searchStartDate) || e.isSame(searchEndDate)).length > 0) {
+          conflicts = true;
+        }
+        //Check if there is a gap between the search start date and an existing reservation
+        if(campsiteReservations[item.id].filter(e =>
+          e.isSame(moment(searchStartDate).subtract(1, 'days'))).length === 0){
+          for (let i = 2; i <= gapRule; i++){
+            if(campsiteReservations[item.id].filter(e =>
+              e.isSame(moment(searchStartDate).subtract(gapRule, 'days'))).length > 0){
               conflicts = true;
+              break;
             }
-            //Check if the search end date leaves a gap with an existing reservation start date
-            else if (searchEndDate.isBetween(moment(reservationStartDate).subtract(gapRule, 'days'),
-              moment(reservationEndDate).subtract(minGap, 'days'))) {
+          }
+        }
+        //Check if there is a gap between the search end date and an existing reservation
+        if(campsiteReservations[item.id].filter(e =>
+          e.isSame(moment(searchEndDate).add(1, 'days'))).length === 0){
+          for (let i = 2; i <= gapRule; i++){
+            if(campsiteReservations[item.id].filter(e =>
+              e.isSame(moment(searchEndDate).add(gapRule, 'days'))).length > 0){
               conflicts = true;
+              break;
             }
-            //Check if search start date is within existing reservation
-            else if (searchStartDate.isSameOrAfter(reservationStartDate) && searchStartDate.isSameOrBefore(reservationEndDate)) {
-              conflicts = true;
-            }
-            //Check if end date is within existing reservation
-            else if (searchEndDate.isSameOrAfter(reservationStartDate) && searchEndDate.isSameOrBefore(reservationEndDate)) {
-              conflicts = true;
-            }
-        });
+          }
+        }
         if (!conflicts){
-          this.availableCampsites.push(item.name)
+          availableCampsites.push(item.name)
         }
       }else{
         //the campsite has no reservations so you can book
-        this.availableCampsites.push(item.name)
+        availableCampsites.push(item.name)
       }
     });
+    return availableCampsites;
   }
 
 }
